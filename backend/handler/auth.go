@@ -3,11 +3,12 @@ package handler
 import (
 	"context"
 	"fmt"
-	"myapp/config"
 	"myapp/models"
 	"net/http"
+	"os"
 	"strings"
 	"time"
+
 	"github.com/golang-jwt/jwt/v5"
 )
 
@@ -17,7 +18,7 @@ const jwtContextKey contextKey = contextKey("jwtClaims")
 
 func CreateUserToken(user *models.User) (string, error) {
 	// Replace "my-secret-key" with your actual secret key
-	signingKey := []byte(config.JWT_SECRET)
+	signingKey := []byte(os.Getenv("JWT_SECRET"))
 
 	// Create the JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
@@ -35,13 +36,13 @@ func CreateUserToken(user *models.User) (string, error) {
 	return tokenString, nil
 }
 
-//Middleware to validate JWT Bearer token from header and 
+// Middleware to validate JWT Bearer token from header and
 func JwtMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Get the authorization header
 		authHeader := r.Header.Get("Authorization")
 		if authHeader == "" {
-			http.Error(w, "Invalid authroization",http.StatusUnauthorized)
+			http.Error(w, "Invalid authroization", http.StatusUnauthorized)
 			return
 		}
 
@@ -52,7 +53,7 @@ func JwtMiddleware(next http.Handler) http.Handler {
 				return nil, fmt.Errorf("invalid token signing method")
 			}
 			// Replace "my-secret-key" with your actual secret key
-			return []byte(config.JWT_SECRET), nil
+			return []byte(os.Getenv("JWT_SECRET")), nil
 		})
 		if err != nil {
 			http.Error(w, err.Error(), http.StatusInternalServerError)
@@ -83,20 +84,26 @@ func getUserClaims(w http.ResponseWriter, r *http.Request) (*models.User, bool) 
 	// Retrieve the JWT claims from the request context
 	claims, ok := r.Context().Value(jwtContextKey).(jwt.MapClaims)
 	if !ok {
+		fmt.Printf("Could net get context")
 		return nil, ok
 	}
 
 	// Access the JWT claims
 	email, ok := claims["email"].(string)
 	if !ok {
+		fmt.Printf("Could net get email clain as uint")
 		return nil, ok
 	}
 
 	// Access the JWT claims
-	id, ok := claims["id"].(string)
+	idFloat, ok := claims["id"].(float64)
 	if !ok {
+		fmt.Printf("Could net get ID clain as uint")
 		return nil, ok
 	}
+	//convert id back to uint
+	id := uint(idFloat)
+
 	user := models.User{Email: email, ID: id}
 	return &user, true
 }

@@ -2,18 +2,26 @@ package main
 
 import (
 	"log"
-	"myapp/config"
 	"myapp/handler"
 	"myapp/models"
 	"net/http"
+	"os"
+
+	"github.com/joho/godotenv"
 
 	"github.com/go-chi/chi/v5"
 )
 
 func main() {
 
+	//import ENV file 
+		// Load environment variables from the .env file
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
 	//Connect to database using connection string
-	err := models.ConnectDB(config.POSTGRESS_CONNECTION)
+	err = models.ConnectDB(os.Getenv("POSTGRESS_CONNECTION"))
 	if err != nil {
 		panic(err)
 	}
@@ -38,5 +46,5 @@ func main() {
 		r.Get("/api/users/me", handler.GetSelfHandler)
 	})
 
-	log.Fatal(http.ListenAndServe(config.PORT, r))
+	log.Fatal(http.ListenAndServe(os.Getenv("PORT"), r))
 }

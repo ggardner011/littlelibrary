@@ -24,8 +24,13 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db_user, _ := models.GetUserByEmail(user.Email)
-	if db_user != nil {
+	exists, err := models.UserExistsByEmail(user.Email)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		fmt.Println("Failed to Check if user exists")
+		return
+	}
+	if exists {
 		http.Error(w, "User already exists", http.StatusBadRequest)
 		return
 	}
@@ -46,7 +51,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	db_user, err = models.GetUserByEmail(user.Email)
+	db_user, err := models.GetUserByEmail(user.Email)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
