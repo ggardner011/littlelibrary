@@ -6,8 +6,9 @@ import (
 
 	"time"
 
-	"gorm.io/gorm"
 	"strings"
+
+	"gorm.io/gorm"
 
 	_ "github.com/lib/pq"
 )
@@ -97,4 +98,15 @@ func UserExistsByEmail(email string) (bool, error) {
 	return count > 0, nil
 }
 
+func GrantAdminAccess(email string) error {
+	exists, err := UserExistsByEmail(email)
+	if (!exists) || (err != nil) {
+		return errors.New("user not found")
+	}
 
+	err = db.Model(&User{}).Where("email = ?", email).Updates(map[string]interface{}{"isAdmin": true}).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}

@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"fmt"
+	"myapp/controller"
 	"myapp/models"
 	"net/http"
 
@@ -58,7 +59,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//create Token and add it to JWTResponse Object
-	tokenString, err := CreateUserToken(db_user)
+	tokenString, err := controller.CreateUserToken(db_user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -109,7 +110,7 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//create Token and add it to JWTResponse Object
-	tokenString, err := CreateUserToken(db_user)
+	tokenString, err := controller.CreateUserToken(db_user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
@@ -135,22 +136,15 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 
 // Secured with JWT
 func GetSelfHandler(w http.ResponseWriter, r *http.Request) {
-	user, ok := getUserClaims(w, r)
+	user, ok := controller.GetUserFromJWT(w, r)
 	if !ok {
-		http.Error(w, "Failed to get Token from context", http.StatusInternalServerError)
-		return
-	}
-	//Get User information based on the email present in the JWT
-	db_user, err := models.GetUserByID(user.ID)
-	if err != nil {
-		fmt.Println("failed to find user")
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		http.Error(w, "Failed to authenticate user", http.StatusForbidden)
 		return
 	}
 
-	db_user.Password = ""
+	user.Password = ""
 
-	jsonResponse, err := json.Marshal(db_user)
+	jsonResponse, err := json.Marshal(user)
 	if err != nil {
 		http.Error(w, "Failed to create JSON", http.StatusInternalServerError)
 		return
@@ -162,4 +156,33 @@ func GetSelfHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Write the JSON response to the response body
 	w.Write(jsonResponse)
+}
+
+// Checks that the user is an Admin and if so, grants the user specified in the request body admin access
+func AddAdminHandler(w http.ResponseWriter, r *http.Request) {
+	user, ok := controller.GetUserFromJWT(w, r)
+	if !ok {
+		http.Error(w, "Failed to authenticate user", http.StatusForbidden)
+		return
+	}
+	//Check if signed in user is Admin, if not throw an error
+	if !user.IsAdmin {
+		http.Error(w, "Failed, user is not admin", http.StatusForbidden)
+		return
+	}
+
+	//Get the user from the request body corresponding to the user to grant admin access to
+	var request_user models.User
+	err := json.NewDecoder(r.Body).Decode(&request_user)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		fmt.Println("Failed to Load JSON")
+		return
+	}
+
+	err = models.GrantAdminAccess(request_user.Email)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+	}
+
 }
