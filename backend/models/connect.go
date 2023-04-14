@@ -5,6 +5,7 @@ import (
 	"os"
 
 	_ "github.com/lib/pq"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 )
@@ -32,23 +33,38 @@ func ConnectDB(connStr string) error {
 		return err
 	}
 
+	// Enable the pg_trgm extension
+	err = db.Exec("CREATE EXTENSION IF NOT EXISTS pg_trgm").Error
+	if err != nil {
+		fmt.Println("Error creating pg_trgm extension:", err)
+	}
+
 	// Run the migrations.
 	err = db.AutoMigrate(&User{})
 	if err != nil {
 		panic("Failed to migrate")
 	}
+	err = db.AutoMigrate(&Book{})
+	if err != nil {
+		panic("Failed to migrate")
+	}
+	///Create Trigram indexes on fields used for search
+	db.Exec("CREATE INDEX IF NOT EXISTS idx_books_title_trgm ON books USING gin(title gin_trgm_ops)")
+	db.Exec("CREATE INDEX IF NOT EXISTS idx_books_author_trgm ON books USING gin(author gin_trgm_ops)")
+	db.Exec("CREATE INDEX IF NOT EXISTS idx_books_isbn_trgm ON books USING gin(isbn gin_trgm_ops)")
 
-	exists, err := UserExistsByEmail("admin@admin.com")
+	user, err := GetUserByEmail("admin@admin.com")
 	if err != nil {
 		panic("Failed to check if admin user exists")
 	}
 
 	// Create an admin user if does not exist
-	if !(exists) {
+	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte(os.Getenv("ADMIN_PASSWORD")), bcrypt.DefaultCost)
+	if user == nil {
 		admin := &User{
 			Name:     "Admin",
 			Email:    "ADMIN@admin.com",
-			Password: os.Getenv("ADMIN_PASSWORD"),
+			Password: string(hashedPassword),
 			IsAdmin:  true,
 		}
 		result := db.Create(admin)

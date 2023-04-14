@@ -2,6 +2,7 @@ package handler
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"myapp/controller"
 	"myapp/models"
@@ -9,10 +10,6 @@ import (
 
 	"golang.org/x/crypto/bcrypt"
 )
-
-type JWTResponse struct {
-	Token string `json:"token"`
-}
 
 // HTTP handler to create a new user.
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
@@ -25,15 +22,18 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	exists, err := models.UserExistsByEmail(user.Email)
+	db_user, err := models.GetUserByEmail(user.Email)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		fmt.Println("Failed to Check if user exists")
 		return
 	}
-	if exists {
-		http.Error(w, "User already exists", http.StatusBadRequest)
+	if db_user != nil {
+		err = errors.New("user Already Exists")
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		fmt.Println("User already exists")
 		return
+
 	}
 
 	// Hash the user's password using bcrypt.
@@ -46,25 +46,19 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	user.Password = string(hashedPassword)
 
 	// Call the CreateUser function to insert the new user into the database.
-	err = models.CreateUser(user)
+	_, err = models.CreateUser(&user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
-	db_user, err := models.GetUserByEmail(user.Email)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-
 	//create Token and add it to JWTResponse Object
-	tokenString, err := controller.CreateUserToken(db_user)
+	tokenString, err := controller.CreateUserToken(&user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	response := JWTResponse{Token: tokenString}
+	response := Response{Token: tokenString}
 
 	// Marshal the struct to JSON
 	jsonResponse, err := json.Marshal(response)
@@ -79,7 +73,6 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Write the JSON response to the response body
 	w.Write(jsonResponse)
-
 }
 
 // HTTP handler to create a new user.
@@ -93,11 +86,18 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//Check if user exists, probably not optimal
+
 	///Get the User corresponding into the sign in
 	db_user, err := models.GetUserByEmail(user.Email)
 	if err != nil {
 		fmt.Println("failed to find user")
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	//If user does not exist return error
+	if db_user == nil {
+		http.Error(w, "User does not exist", http.StatusBadRequest)
 		return
 	}
 
@@ -115,7 +115,7 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	response := JWTResponse{Token: tokenString}
+	response := Response{Token: tokenString}
 
 	// Marshal the struct to JSON
 	jsonResponse, err := json.Marshal(response)
@@ -136,15 +136,23 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 
 // Secured with JWT
 func GetSelfHandler(w http.ResponseWriter, r *http.Request) {
-	user, ok := controller.GetUserFromJWT(w, r)
+	user, ok := controller.GetUserClaims(w, r)
 	if !ok {
 		http.Error(w, "Failed to authenticate user", http.StatusForbidden)
 		return
 	}
 
-	user.Password = ""
+	//Get user data
+	user_db, err := models.GetUserByID(user.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println("Failed to get user")
+		return
+	}
 
-	jsonResponse, err := json.Marshal(user)
+	user_db.Password = ""
+
+	jsonResponse, err := json.Marshal(user_db)
 	if err != nil {
 		http.Error(w, "Failed to create JSON", http.StatusInternalServerError)
 		return
@@ -160,20 +168,28 @@ func GetSelfHandler(w http.ResponseWriter, r *http.Request) {
 
 // Checks that the user is an Admin and if so, grants the user specified in the request body admin access
 func AddAdminHandler(w http.ResponseWriter, r *http.Request) {
-	user, ok := controller.GetUserFromJWT(w, r)
+	user, ok := controller.GetUserClaims(w, r)
 	if !ok {
 		http.Error(w, "Failed to authenticate user", http.StatusForbidden)
 		return
 	}
+
+	//Get user from db and check if they are an admin. This is done in case access has been revoked since the JWT was issued.
+	db_user, err := models.GetUserByID(user.ID)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		fmt.Println("Failed to get user")
+		return
+	}
 	//Check if signed in user is Admin, if not throw an error
-	if !user.IsAdmin {
+	if !db_user.IsAdmin {
 		http.Error(w, "Failed, user is not admin", http.StatusForbidden)
 		return
 	}
 
 	//Get the user from the request body corresponding to the user to grant admin access to
 	var request_user models.User
-	err := json.NewDecoder(r.Body).Decode(&request_user)
+	err = json.NewDecoder(r.Body).Decode(&request_user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		fmt.Println("Failed to Load JSON")
@@ -183,6 +199,22 @@ func AddAdminHandler(w http.ResponseWriter, r *http.Request) {
 	err = models.GrantAdminAccess(request_user.Email)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
 	}
 
+	response := Response{Message: fmt.Sprintf("Admin access granted to %s", request_user.Email)}
+
+	// Marshal the struct to JSON
+	jsonResponse, err := json.Marshal(response)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	// Set the response headers
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+
+	// Write the JSON response to the response body
+	w.Write(jsonResponse)
 }

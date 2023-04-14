@@ -5,6 +5,7 @@ import (
 	"myapp/models"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"github.com/go-chi/jwtauth/v5"
@@ -18,9 +19,10 @@ func CreateUserToken(user *models.User) (string, error) {
 
 	// Create the JWT token
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email": user.Email,
-		"id":    user.ID,
-		"exp":   time.Now().Add(time.Hour * 24).Unix(),
+		"email":   strings.ToLower(user.Email),
+		"id":      user.ID,
+		"isadmin": user.IsAdmin,
+		"exp":     time.Now().Add(time.Hour * 24).Unix(),
 	})
 
 	// Sign the token with the secret key
@@ -32,8 +34,8 @@ func CreateUserToken(user *models.User) (string, error) {
 	return tokenString, nil
 }
 
-//Get user associated with the verified JWT passed via the reuqest context. Returns data for user from the Database
-func GetUserFromJWT(w http.ResponseWriter, r *http.Request) (*models.User, bool) {
+// Get user associated with the verified JWT passed via the reuqest context. Returns data for user from the Database
+func GetUserClaims(w http.ResponseWriter, r *http.Request) (*models.User, bool) {
 	// Retrieve the JWT claims from the request context
 	_, claims, err := jwtauth.FromContext(r.Context())
 	if err != nil {
@@ -44,20 +46,28 @@ func GetUserFromJWT(w http.ResponseWriter, r *http.Request) (*models.User, bool)
 	// Access the JWT claims
 	idFloat, ok := claims["id"].(float64)
 	if !ok {
+		fmt.Printf("Could net get email clain as string")
+		return nil, ok
+	}
+
+	// Access the JWT claims
+	email, ok := claims["email"].(string)
+	if !ok {
 		fmt.Printf("Could net get ID clain as uint")
 		return nil, ok
 	}
+
+	// Access the JWT claims
+	isadmin, ok := claims["isadmin"].(bool)
+	if !ok {
+		fmt.Printf("Could net get isadmin claim as string")
+		return nil, ok
+	}
+
 	//convert id back to uint
 	id := uint(idFloat)
 
-	//Get User information based on the ID present in the JWT
-		db_user, err := models.GetUserByID(id)
-		if err != nil {
-			fmt.Println("failed to find user in DB")
-			return nil, false
-		}
+	user := &models.User{ID: id, Email: email, IsAdmin: isadmin}
 
-
-	return db_user, true
+	return user, true
 }
-
