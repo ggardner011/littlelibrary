@@ -14,7 +14,7 @@ const HomePage: React.FC = () => {
               className='img-fluid'
             />
           </Link>
-          <h2 className='mb-4'>Welcome!</h2>
+          <h1 className='mt-4'>Welcome!</h1>
         </div>
       </div>
     </div>

@@ -105,7 +105,7 @@ func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	err = bcrypt.CompareHashAndPassword([]byte(db_user.Password), []byte(user.Password))
 	if err != nil {
 		fmt.Println("Failed to hash Password")
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { login, reset } from "../features/auth/authSlice";
+import { login, resetAuth } from "../features/auth/authSlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { RootState, AppDispatch } from "../app/store";
@@ -18,7 +18,7 @@ const LoginPage: React.FC = () => {
   useEffect(() => {
     if (error) {
       toast(error);
-      dispatch(reset())
+      dispatch(resetAuth())
     }
     if (success) {
       navigate("/");

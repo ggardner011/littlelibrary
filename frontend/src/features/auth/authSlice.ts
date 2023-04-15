@@ -1,6 +1,7 @@
 // authSlice.ts
 import { createSlice, createAsyncThunk, PayloadAction } from "@reduxjs/toolkit";
 import api from "../../app/api";
+import { getAxiosError } from "../../app/helpers";
 
 interface AuthState {
   token: string | null;
@@ -14,7 +15,7 @@ const token = localStorage.getItem("token");
 const initialState: AuthState = {
   token: token || null,
   loading: false,
-  success: token ? true : false,
+  success: token != null ? true : false,
   error: null,
 };
 
@@ -29,11 +30,7 @@ export const login = createAsyncThunk<
     localStorage.setItem("token", token);
     return response.data.token;
   } catch (error) {
-    const message =
-      error.response.data ||
-      (error.response && error.response.data && error.response.data.message) ||
-      error.message ||
-      error.toString();
+    const message = getAxiosError(error);
     return thunkApi.rejectWithValue(message);
   }
 });
@@ -49,11 +46,7 @@ export const register = createAsyncThunk<
     localStorage.setItem("token", token);
     return response.data.token;
   } catch (error) {
-    const message =
-      (error.response && error.response.data) ||
-      (error.response && error.response.data && error.response.data.message) ||
-      error.message ||
-      error.toString();
+    const message = getAxiosError(error);
     return thunkApi.rejectWithValue(message);
   }
 });
@@ -66,7 +59,7 @@ const authSlice = createSlice({
   name: "auth",
   initialState,
   reducers: {
-    reset: (state) => {
+    resetAuth: (state) => {
       state.loading = false;
       state.error = null;
     },
@@ -110,6 +103,6 @@ const authSlice = createSlice({
   },
 });
 
-export const { reset } = authSlice.actions;
+export const { resetAuth } = authSlice.actions;
 
 export default authSlice.reducer;

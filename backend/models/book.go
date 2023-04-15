@@ -16,6 +16,7 @@ type Book struct {
 	DeletedAt      gorm.DeletedAt `gorm:"index" json:"deleted_at,omitempty"`
 	Title          string         `gorm:"not null" json:"title"`
 	Author         string         `gorm:"not null" json:"author"`
+	Description    string         `gorm:"not null" json:"description"`
 	ISBN           string         `gorm:"uniqueIndex;not null" json:"isbn"`
 	PublishingDate Date           `gorm:"not null" json:"publishing_date"`
 	TotalCopies    uint           `gorm:"not null" json:"total_copies"`

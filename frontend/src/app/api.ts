@@ -13,4 +13,16 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+// Add an interceptor to check for unauthorized responses
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      store.dispatch({ type: "auth/logout" });
+      window.location.href = "/login";
+    }
+    return Promise.reject(error);
+  }
+);
+
 export default api;

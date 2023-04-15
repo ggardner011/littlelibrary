@@ -2,15 +2,14 @@ import React, { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { RootState, AppDispatch } from "../app/store";
 import { useDispatch, useSelector } from "react-redux";
-import { logout, reset } from "../features/auth/authSlice";
+import { logout, resetAuth } from "../features/auth/authSlice";
 import api from "../app/api";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 
 function Header() {
-  const { token, success, loading, error } = useSelector(
-    (state: RootState) => state.auth
-  );
+  const { isadmin } = useSelector((state: RootState) => state.user);
+  const { success } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 
@@ -20,24 +19,23 @@ function Header() {
     navigate("/");
   };
 
-  const [Admin, setAdmin] = useState(false);
-
-  useEffect(() => {
-    const getIsAdmin = async () => {
-      const response = await api.get("/users/me");
-      const { isadmin } = response.data;
-      setAdmin(isadmin);
-    };
-    getIsAdmin().catch((error) => setAdmin(false));
-  }, [success, token, loading, dispatch]);
-
   return (
     <nav
       className='navbar navbar-expand-md navbar-dark bg-primary '
       style={{ padding: "15px" }}
     >
-      <Link className='navbar-brand' to='/'>
-        Little Library
+      <Link className='navbar-brand navbar bg-body-tertiary' to='/'>
+        <div className='container-fluid'>
+          <img
+            src='favicon.ico'
+            alt=''
+            width='30'
+            height='24'
+            className='d-inline-block align-text-top text-white '
+          />
+
+          <div className='text-white ms-1'>Little Library</div>
+        </div>
       </Link>
       <button
         className='navbar-toggler'
@@ -79,7 +77,7 @@ function Header() {
             </>
           ) : (
             <>
-              {Admin ? (
+              {isadmin ? (
                 <li className='nav-item'>
                   <Link className='nav-link' to='/admin'>
                     Admin
