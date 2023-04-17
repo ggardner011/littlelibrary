@@ -3,79 +3,51 @@ import { Book } from "../app/interfaces";
 import { toast } from "react-toastify";
 import api from "../app/api";
 import { getAxiosError, getDisplayDate } from "../app/helpers";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import { RootState } from "../app/store";
 
-const BookPage: React.FC = () => {
+const AddBookPage: React.FC = () => {
   const { isadmin } = useSelector((state: RootState) => state.user);
-  const { isbn } = useParams<{ isbn: string }>();
+  const navigate = useNavigate();
 
-  const [book, setBook] = useState<Book>({
-    id: undefined,
-    title: "",
-    author: "",
-    isbn: "",
-    description: "",
-    publishing_date: "",
-  });
-
-  const [isEditing, setIsEditing] = useState(false);
-  const [title, setTitle] = useState(book.title);
-  const [author, setAuthor] = useState(book.author);
-  const [description, setDescription] = useState(book.description);
-  const [publishingDate, setPublishingDate] = useState(
-    book.publishing_date.substring(0, 10)
-  );
-  
-
-  //Get book by isbn
-  useEffect(() => {
-    const getBook = async () => {
-      try {
-        const response = await api.get(`/books?isbn=${isbn}`);
-
-        setBook(response.data);
-      } catch (error) {
-        const message = getAxiosError(error);
-        toast(message);
-      }
-    };
-    getBook();
-  }, [isbn]);
-
-  const handleEditClick = () => {
-    setTitle(book.title);
-    setAuthor(book.author);
-    setDescription(book.description);
-    setPublishingDate(book.publishing_date.substring(0, 10));
-    setIsEditing(!isEditing);
-  };
-
-  const handleCancelClick = () => {
-    setIsEditing(!isEditing);
-  };
+  const [isbn, setIsbn] = useState("");
+  const [title, setTitle] = useState("");
+  const [author, setAuthor] = useState("");
+  const [description, setDescription] = useState("");
+  const [publishingDate, setPublishingDate] = useState("");
 
   const handleSaveClick = async () => {
     const data: Book = {
-      isbn: book.isbn,
+      isbn: isbn,
       author: author,
       description: description,
       title: title,
       publishing_date: publishingDate,
     };
-    try {
-      const response = await api.put(`/books`, data);
 
-      setBook(response.data);
-      setTitle(book.title);
-      setAuthor(book.author);
-      setDescription(book.description);
-      setPublishingDate(book.publishing_date.substring(0, 10));
-      setIsEditing(!isEditing);
+    try {
+      const response = await api.post(`/books`, data);
+      navigate(`/books/${response.data.isbn}`);
     } catch (error) {
       const message = getAxiosError(error);
       toast(message);
+    }
+  };
+
+  const handleResetClick = () => {
+    setIsbn("");
+    setTitle("");
+    setAuthor("");
+    setDescription("");
+    setPublishingDate("");
+  };
+
+  const handleChangeISBN = (event: any) => {
+    const { value } = event.target;
+    const regex = /^[0-9]{0,13}$/;
+    if (regex.test(value)) {
+      setIsbn(value);
     }
   };
 
@@ -85,11 +57,7 @@ const BookPage: React.FC = () => {
         <div className='col-md-6'>
           <div className='card bg-light p-4'>
             <div className='card-body'>
-              <h1 className='text-center mb-4'>{book.title}</h1>
-
-              <p>ISBN: {book.isbn}</p>
-
-              {isEditing ? (
+              {
                 <form>
                   <div className='mb-3'>
                     <label htmlFor='titleInput' className='form-label'>
@@ -101,6 +69,18 @@ const BookPage: React.FC = () => {
                       id='titleInput'
                       value={title}
                       onChange={(e) => setTitle(e.target.value)}
+                    />
+                  </div>
+                  <div className='mb-3'>
+                    <label htmlFor='isbnInput' className='form-label'>
+                      ISBN
+                    </label>
+                    <input
+                      type='text'
+                      className='form-control'
+                      id='titleInput'
+                      value={isbn}
+                      onChange={handleChangeISBN}
                     />
                   </div>
                   <div className='mb-3'>
@@ -149,29 +129,12 @@ const BookPage: React.FC = () => {
                   <button
                     type='button'
                     className='btn btn-primary me-3'
-                    onClick={handleCancelClick}
+                    onClick={handleResetClick}
                   >
-                    Cancel
+                    Reset
                   </button>
                 </form>
-              ) : (
-                <>
-                  <p>Author: {book.author}</p>
-                  <p>Description: {book.description}</p>
-                  <p>Publishing Date: {getDisplayDate(book.publishing_date)}</p>
-                  {isadmin ? (
-                    <button
-                      type='button'
-                      className='btn btn-primary me-3'
-                      onClick={handleEditClick}
-                    >
-                      Edit
-                    </button>
-                  ) : (
-                    <></>
-                  )}
-                </>
-              )}
+              }
             </div>
           </div>
         </div>
@@ -180,4 +143,4 @@ const BookPage: React.FC = () => {
   );
 };
 
-export default BookPage;
+export default AddBookPage;

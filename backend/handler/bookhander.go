@@ -210,6 +210,7 @@ func SearchBooksHandler(w http.ResponseWriter, r *http.Request) {
 	book.ISBN = queryParams.Get("isbn")
 	book.Author = queryParams.Get("author")
 	book.Title = queryParams.Get("title")
+	book.Description = queryParams.Get("description")
 
 	//Parse out the number of records requested
 	limit := queryParams.Get("limit")

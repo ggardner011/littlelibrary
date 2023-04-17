@@ -27,14 +27,14 @@ function Header() {
       <Link className='navbar-brand navbar bg-body-tertiary' to='/'>
         <div className='container-fluid'>
           <img
-            src='favicon.ico'
-            alt=''
+            src='android-chrome-192x192.png' //'android-chrome-512x512.png'
+            alt='android-chrome-512x512.png'
             width='30'
             height='24'
             className='d-inline-block align-text-top text-white '
           />
 
-          <div className='text-white ms-1'>Little Library</div>
+          <div className='text-white ms-2'>Little Library</div>
         </div>
       </Link>
       <button

@@ -11,11 +11,11 @@ const BookList: React.FC<BookListProps> = ({ books }) => {
   return (
     <div className='row row-cols-1 row-cols-md-2 g-2 p-2'>
       {books.map((book) => (
-        <Link
-          to={`/books/${book.isbn}`}
-          style={{ textDecoration: "none", color: "inherit" }}
-        >
-          <div key={book.id} className='col'>
+        <div key={book.id} className='col'>
+          <Link
+            to={`/books/${book.isbn}`}
+            style={{ textDecoration: "none", color: "inherit" }}
+          >
             <div className='card h-100'>
               <div className='card-body p-3'>
                 <h6
@@ -31,8 +31,8 @@ const BookList: React.FC<BookListProps> = ({ books }) => {
                 </p>
               </div>
             </div>
-          </div>
-        </Link>
+          </Link>
+        </div>
       ))}
     </div>
   );

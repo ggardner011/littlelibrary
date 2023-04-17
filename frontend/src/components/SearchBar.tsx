@@ -1,25 +1,61 @@
 import React, { useState } from "react";
 import { useSelector } from "react-redux";
 import { RootState } from "../app/store";
+import { useNavigate } from "react-router";
 
 interface SearchBarProps {
-  onSearch: (searchParams: {
+  state: {
     title: string;
     isbn: string;
     author: string;
-  }) => void;
-  onAddBook: () => void;
+    description: string;
+    setTitle: React.Dispatch<React.SetStateAction<string>>;
+    setAuthor: React.Dispatch<React.SetStateAction<string>>;
+    setIsbn: React.Dispatch<React.SetStateAction<string>>;
+    setDescription: React.Dispatch<React.SetStateAction<string>>;
+  };
 }
 
-const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onAddBook }) => {
+const SearchBar: React.FC<SearchBarProps> = ({ state }) => {
+  const {
+    title,
+    setTitle,
+    author,
+    setAuthor,
+    isbn,
+    setIsbn,
+    description,
+    setDescription,
+  } = state;
+
   const { isadmin } = useSelector((state: RootState) => state.user);
 
-  const [title, setTitle] = useState("");
-  const [isbn, setIsbn] = useState("");
-  const [author, setAuthor] = useState("");
+  const navigate = useNavigate();
 
-  const handleSearch = () => {
-    onSearch({ title, isbn, author });
+  const handleSearch = async () => {
+    //append whatever query parameters are not null to get the search params
+    const q: string[] = [];
+    if (author != "") {
+      q.push(`author=${author}`);
+    }
+    if (title != "") {
+      q.push(`title=${title}`);
+    }
+    if (isbn != "") {
+      q.push(`isbn=${isbn}`);
+    }
+    if (description != "") {
+      q.push(`description=${description}`);
+    }
+
+    const query = q.join("&");
+
+    //Navigate to the search location
+    navigate(`/books?${query}`);
+  };
+
+  const onAddBook = () => {
+    navigate("/books/add");
   };
 
   return (
@@ -46,6 +82,13 @@ const SearchBar: React.FC<SearchBarProps> = ({ onSearch, onAddBook }) => {
             placeholder='Author'
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
+          />
+          <input
+            type='text'
+            className='form-control me-2'
+            placeholder='Description'
+            value={description}
+            onChange={(e) => setDescription(e.target.value)}
           />
           <button className='btn btn-primary me-2' onClick={handleSearch}>
             Search

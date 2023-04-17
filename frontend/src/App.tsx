@@ -1,4 +1,3 @@
-import React, { useState } from "react";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import RegisterPage from "./pages/RegisterPage";
 import LoginPage from "./pages/LoginPage";
@@ -14,13 +13,16 @@ import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { getUser, resetUser } from "./features/user/userSlice";
 import { toast } from "react-toastify";
+import AddBookPage from "./pages/AddBookPage";
 
 const App: React.FC = () => {
   const { success, loading } = useSelector((state: RootState) => state.auth);
   const { error } = useSelector((state: RootState) => state.user);
 
   const dispatch = useDispatch<AppDispatch>();
+
   //Get user from api if token retrieval is success
+
   useEffect(() => {
     if (success) {
       dispatch(getUser());
@@ -32,11 +34,7 @@ const App: React.FC = () => {
       toast(error);
       dispatch(resetUser());
     }
-  }, [success, loading, dispatch]);
-
-  ///Persist state on Route changes
-  const [books, setBooks] = useState([]);
-  ///
+  }, [success, loading]);
 
   return (
     <>
@@ -46,11 +44,9 @@ const App: React.FC = () => {
         <Routes>
           <Route path='/' element={<HomePage />} />
           <Route path='/register' element={<RegisterPage />} />
-          <Route
-            path='/books'
-            element={<BooksPage books={books} setBooks={setBooks} />}
-          />
+          <Route path='/books' element={<BooksPage />} />
           <Route path='/books/:isbn' element={<BookPage />} />
+          <Route path='/books/add' element={<AddBookPage />} />
 
           <Route path='/login' element={<LoginPage />} />
         </Routes>

@@ -3,6 +3,7 @@ package models
 import (
 	"errors"
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
@@ -25,10 +26,39 @@ type Book struct {
 	User User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:AddedBy" json:"user,omitempty"`
 }
 
+func validateBookInput(b *Book) error {
+	var emptyFields []string
+
+	if b.Title == "" {
+		emptyFields = append(emptyFields, "Title")
+	}
+	if b.Author == "" {
+		emptyFields = append(emptyFields, "Author")
+	}
+	isbnregex := regexp.MustCompile("^[0-9]{10}|[0-9]{13}$")
+	if !isbnregex.MatchString(b.ISBN) {
+		return errors.New("ISBN must be either ten or thirteen numeric characters")
+	}
+	if b.PublishingDate.Time == EmptyDate {
+		emptyFields = append(emptyFields, "Publishing Date")
+	}
+	//Check if there any empty felds
+	if len(emptyFields) > 0 {
+		err := fmt.Sprintf("%s can not be blank", strings.Join(emptyFields, ", "))
+		return errors.New(err)
+	}
+	return nil
+}
+
 // ////////////////////////////Create new book
 func CreateBook(b *Book) (*Book, error) {
 	// Get the GORM database connection.
 	db := getDB()
+	//Ensure that all fields are populated
+	err := validateBookInput(b)
+	if err != nil {
+		return nil, err
+	}
 	b.ISBN = strings.ToLower(b.ISBN)
 	// Create the user using GORM.
 	result := db.Preload("User").Where("isbn = ?", b.ISBN).FirstOrCreate(b)
@@ -50,6 +80,13 @@ func CreateBook(b *Book) (*Book, error) {
 func UpsertBook(b *Book) (*Book, error) {
 	// Get the GORM database connection.
 	db := getDB()
+
+	//Ensure that all fields are populated
+	err := validateBookInput(b)
+	if err != nil {
+		return nil, err
+	}
+
 	b.ISBN = strings.ToLower(b.ISBN)
 	//get values for update
 	updated := *b
@@ -61,7 +98,7 @@ func UpsertBook(b *Book) (*Book, error) {
 		return nil, result.Error
 	}
 
-	//If no records found, update
+	//If no records created, update
 	if result.RowsAffected == 0 {
 		result := db.Preload("User").Model(b).Where("isbn = ?", b.ISBN).Updates(updated)
 		if result.Error != nil {
@@ -107,26 +144,29 @@ func GetBooks(b *Book, c int) ([]Book, error) {
 
 	// Count the number of non-empty fields to calculate the average similarity
 	nonEmptyFieldCount := 0
-	titleSimilarity := "0"
-	authorSimilarity := "0"
-	isbnSimilarity := "0"
 	queryParameters := []interface{}{}
+	queryStrings := []string{}
 
 	// Update the similarity expressions and nonEmptyFieldCount for non-empty fields in the Book struct
 	if b.Title != "" {
 		nonEmptyFieldCount++
-		titleSimilarity = "similarity(title, ?)"
+		queryStrings = append(queryStrings, "similarity(title, ?)")
 		queryParameters = append(queryParameters, b.Title)
 	}
 	if b.Author != "" {
 		nonEmptyFieldCount++
-		authorSimilarity = "similarity(author, ?)"
+		queryStrings = append(queryStrings, "similarity(author, ?)")
 		queryParameters = append(queryParameters, b.Author)
 	}
 	if b.ISBN != "" {
 		nonEmptyFieldCount++
-		isbnSimilarity = "similarity(isbn, ?)"
+		queryStrings = append(queryStrings, "similarity(isbn, ?)")
 		queryParameters = append(queryParameters, b.ISBN)
+	}
+	if b.Description != "" {
+		nonEmptyFieldCount++
+		queryStrings = append(queryStrings, "similarity(description, ?)")
+		queryParameters = append(queryParameters, b.Description)
 	}
 
 	// If all fields are empty, return an empty result
@@ -134,14 +174,19 @@ func GetBooks(b *Book, c int) ([]Book, error) {
 		return books, nil
 	}
 
-	// Generate the SELECT query string with the proper similarity expressions
-	selectQuery := fmt.Sprintf(`
-		books.*,
-		((%s) + (%s) + (%s)) / ? as avg_similarity
-	`, titleSimilarity, authorSimilarity, isbnSimilarity)
+	//Add the threshhold to the similarity search for each individual category
+	whereStrings := make([]string, len(queryStrings))
+	for i, val := range queryStrings {
+		whereStrings[i] = val + " > .35"
+	}
 
+	//Construct queries by appending Query conditions
+	selectQuery := `books.*, ` + `(` + strings.Join(queryStrings, " + ") + `) AS avg_similarity`
+	whereQuery := strings.Join(whereStrings, " OR ")
+	fmt.Println(selectQuery, whereQuery)
 	// Build the query to find similar books based on the average similarity
-	query := db.Model(&Book{}).Preload("User").Select(selectQuery, append(queryParameters, float64(nonEmptyFieldCount))...)
+	query := db.Model(&Book{}).Preload("User").Select(selectQuery, queryParameters...)
+	query = query.Where(whereQuery, queryParameters...)
 	result := query.Order("avg_similarity DESC").Limit(c).Find(&books)
 
 	// Handle any errors that occur during the query execution

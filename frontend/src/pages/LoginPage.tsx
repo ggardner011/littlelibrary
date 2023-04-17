@@ -4,6 +4,7 @@ import { login, resetAuth } from "../features/auth/authSlice";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 import { RootState, AppDispatch } from "../app/store";
+import { useSearchParams } from "react-router-dom";
 
 const LoginPage: React.FC = () => {
   const [email, setEmail] = useState("");
@@ -18,7 +19,7 @@ const LoginPage: React.FC = () => {
   useEffect(() => {
     if (error) {
       toast(error);
-      dispatch(resetAuth())
+      dispatch(resetAuth());
     }
     if (success) {
       navigate("/");
@@ -30,6 +31,17 @@ const LoginPage: React.FC = () => {
 
     dispatch(login({ email, password }));
   };
+
+  //Handle toast in redirect
+  const [searchParams] = useSearchParams();
+
+  const redirectQuery = searchParams.get("redirect");
+  useEffect(() => {
+    if (redirectQuery == "badtoken") {
+      toast("Please login or register to continue");
+      navigate("/login");
+    }
+  }, [redirectQuery]);
 
   return (
     <>

@@ -13,6 +13,12 @@ type Date struct {
 
 const dateLayout = "2006-01-02"
 
+var EmptyDate time.Time
+
+func init() {
+	EmptyDate, _ = time.Parse(dateLayout, "0001-01-01")
+}
+
 func (d *Date) UnmarshalJSON(data []byte) error {
 	var dateString string
 	err := json.Unmarshal(data, &dateString)
@@ -20,9 +26,17 @@ func (d *Date) UnmarshalJSON(data []byte) error {
 		return err
 	}
 
-	parsedTime, err := time.Parse(dateLayout, dateString)
-	if err != nil {
-		return err
+	var parsedTime time.Time
+
+	if dateString == "" {
+		parsedTime = EmptyDate
+	} else {
+		parsedTime, err = time.Parse(dateLayout, dateString)
+		if err != nil {
+			fmt.Println("error PArsion")
+			return err
+
+		}
 	}
 
 	d.Time = parsedTime

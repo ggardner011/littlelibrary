@@ -14,11 +14,9 @@ if (container) {
   const root = createRoot(container);
 
   root.render(
-    <React.StrictMode>
-      <Provider store={store}>
-        <App />
-      </Provider>
-    </React.StrictMode>
+    <Provider store={store}>
+      <App />
+    </Provider>
   );
 } else {
   console.error("Root element not found");

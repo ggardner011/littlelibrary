@@ -52,6 +52,7 @@ func ConnectDB(connStr string) error {
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_books_title_trgm ON books USING gin(title gin_trgm_ops)")
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_books_author_trgm ON books USING gin(author gin_trgm_ops)")
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_books_isbn_trgm ON books USING gin(isbn gin_trgm_ops)")
+	db.Exec("CREATE INDEX IF NOT EXISTS idx_books_description_trgm ON books USING gin(description gin_trgm_ops)")
 
 	user, err := GetUserByEmail("admin@admin.com")
 	if err != nil {
