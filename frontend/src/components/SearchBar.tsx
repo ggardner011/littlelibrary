@@ -28,7 +28,7 @@ const SearchBar: React.FC<SearchBarProps> = ({ state }) => {
     setDescription,
   } = state;
 
-  const { isadmin } = useSelector((state: RootState) => state.user);
+  const { isadmin } = useSelector((state: RootState) => state.auth);
 
   const navigate = useNavigate();
 
@@ -60,40 +60,80 @@ const SearchBar: React.FC<SearchBarProps> = ({ state }) => {
 
   return (
     <div className='p-3 mb-3' style={{ backgroundColor: "#f4f4f4" }}>
-      <div className='d-flex align-items-center justify-content-between mb-3'>
+      <div className='d-flex align-items-center justify-content-between '>
         <div className='d-flex'>
-          <input
-            type='text'
-            className='form-control me-2'
-            placeholder='Title'
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <input
-            type='text'
-            className='form-control me-2'
-            placeholder='ISBN'
-            value={isbn}
-            onChange={(e) => setIsbn(e.target.value)}
-          />
-          <input
-            type='text'
-            className='form-control me-2'
-            placeholder='Author'
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-          />
-          <input
-            type='text'
-            className='form-control me-2'
-            placeholder='Description'
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-          />
-          <button className='btn btn-primary me-2' onClick={handleSearch}>
+          <div className='form-group mb-3 me-3'>
+            <label
+              htmlFor='titleInput'
+              className='form-label custom-form-label '
+            >
+              Title
+            </label>
+            <input
+              id='titleInput'
+              type='text'
+              className='form-control'
+              placeholder='Title'
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+            />
+          </div>
+
+          <div className='form-group mb-3 me-3'>
+            <label htmlFor='isbnInput' className='form-label custom-form-label'>
+              ISBN
+            </label>
+            <input
+              id='isbnInput'
+              type='text'
+              className='form-control'
+              placeholder='ISBN'
+              value={isbn}
+              onChange={(e) => setIsbn(e.target.value)}
+            />
+          </div>
+
+          <div className='form-group mb-3 me-3'>
+            <label
+              htmlFor='authorInput'
+              className='form-label custom-form-label'
+            >
+              Author
+            </label>
+            <input
+              id='authorInput'
+              type='text'
+              className='form-control'
+              placeholder='Author'
+              value={author}
+              onChange={(e) => setAuthor(e.target.value)}
+            />
+          </div>
+
+          <div className='form-group mb-3 me-3'>
+            <label
+              htmlFor='descriptionInput'
+              className='form-label custom-form-label'
+            >
+              Description
+            </label>
+            <input
+              id='descriptionInput'
+              type='text'
+              className='form-control'
+              placeholder='Description'
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          <button
+            className='btn btn-primary mt-auto mb-3'
+            onClick={handleSearch}
+          >
             Search
           </button>
         </div>
+
         {isadmin ? (
           <div>
             <button className='btn btn-success' onClick={onAddBook}>

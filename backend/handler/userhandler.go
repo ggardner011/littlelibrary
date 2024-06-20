@@ -14,8 +14,8 @@ import (
 // HTTP handler to create a new user.
 func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the JSON request body into a User object.
-	var user models.User
-	err := json.NewDecoder(r.Body).Decode(&user)
+	user := &models.User{}
+	err := json.NewDecoder(r.Body).Decode(user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		fmt.Println("Failed to Load JSON")
@@ -46,14 +46,14 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 	user.Password = string(hashedPassword)
 
 	// Call the CreateUser function to insert the new user into the database.
-	_, err = models.CreateUser(&user)
+	_, err = models.CreateUser(user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	//create Token and add it to JWTResponse Object
-	tokenString, err := controller.CreateUserToken(&user)
+	tokenString, err := controller.CreateUserToken(user)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

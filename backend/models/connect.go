@@ -2,23 +2,35 @@ package models
 
 import (
 	"fmt"
+	"log"
 	"os"
+	"time"
 
 	_ "github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
+	"gorm.io/gorm/logger"
 )
 
 var db *gorm.DB
 
 // Function to connect to the database and store the connection in the global variable.
 func ConnectDB(connStr string) error {
+	// Set up a new logger with custom configurations
+	appLogger := logger.New(
+		log.New(os.Stdout, "\r\n", log.LstdFlags),
+		logger.Config{
+			SlowThreshold: 200 * time.Millisecond, // Slow SQL threshold
+			LogLevel:      logger.Info,            // Log level
+			Colorful:      true,                   // Enable color
+		},
+	)
 
 	// Open a connection to the database.
 	var err error
 	dialector := postgres.Open(connStr)
-	db, err = gorm.Open(dialector, &gorm.Config{})
+	db, err = gorm.Open(dialector, &gorm.Config{Logger: appLogger})
 	if err != nil {
 		return err
 	}

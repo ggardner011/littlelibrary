@@ -34,7 +34,7 @@ func CreateBookHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the JSON request body into a User object.
 	book := &models.Book{}
-	err = json.NewDecoder(r.Body).Decode(&book)
+	err = json.NewDecoder(r.Body).Decode(book)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		fmt.Println("Failed to Load JSON")
@@ -93,7 +93,7 @@ func UpsertBookHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Parse the JSON request body into a User object.
 	book := &models.Book{}
-	err = json.NewDecoder(r.Body).Decode(&book)
+	err = json.NewDecoder(r.Body).Decode(book)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		fmt.Println("Failed to Load JSON")

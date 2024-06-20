@@ -8,7 +8,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../app/store";
 
 const BookPage: React.FC = () => {
-  const { isadmin } = useSelector((state: RootState) => state.user);
+  const { isadmin } = useSelector((state: RootState) => state.auth);
   const { isbn } = useParams<{ isbn: string }>();
 
   const [book, setBook] = useState<Book>({
@@ -27,7 +27,6 @@ const BookPage: React.FC = () => {
   const [publishingDate, setPublishingDate] = useState(
     book.publishing_date.substring(0, 10)
   );
-  
 
   //Get book by isbn
   useEffect(() => {

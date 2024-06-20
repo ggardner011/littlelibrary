@@ -8,7 +8,7 @@ import { useSelector } from "react-redux";
 import { RootState } from "../app/store";
 
 const AddBookPage: React.FC = () => {
-  const { isadmin } = useSelector((state: RootState) => state.user);
+  const { isadmin } = useSelector((state: RootState) => state.auth);
   const navigate = useNavigate();
 
   const [isbn, setIsbn] = useState("");

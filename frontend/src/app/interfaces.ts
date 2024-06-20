@@ -6,3 +6,13 @@ export interface Book {
   description: string;
   publishing_date: string;
 }
+
+export interface User {
+  id?: number ;
+  name: string;
+  email: string;
+  isadmin: string;
+  description: string;
+  publishing_date: string;
+}
+

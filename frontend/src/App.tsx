@@ -11,31 +11,12 @@ import "react-toastify/dist/ReactToastify.css";
 import { RootState } from "./app/store";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { getUser, resetUser } from "./features/user/userSlice";
+
 import { toast } from "react-toastify";
 import AddBookPage from "./pages/AddBookPage";
+import AdminPage from "./pages/AdminPage";
 
 const App: React.FC = () => {
-  const { success, loading } = useSelector((state: RootState) => state.auth);
-  const { error } = useSelector((state: RootState) => state.user);
-
-  const dispatch = useDispatch<AppDispatch>();
-
-  //Get user from api if token retrieval is success
-
-  useEffect(() => {
-    if (success) {
-      dispatch(getUser());
-    } else {
-      dispatch(resetUser());
-    }
-
-    if (error) {
-      toast(error);
-      dispatch(resetUser());
-    }
-  }, [success, loading]);
-
   return (
     <>
       <ToastContainer />
@@ -47,6 +28,7 @@ const App: React.FC = () => {
           <Route path='/books' element={<BooksPage />} />
           <Route path='/books/:isbn' element={<BookPage />} />
           <Route path='/books/add' element={<AddBookPage />} />
+          <Route path='/admin' element={<AdminPage />} />
 
           <Route path='/login' element={<LoginPage />} />
         </Routes>

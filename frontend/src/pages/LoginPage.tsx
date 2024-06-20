@@ -52,7 +52,7 @@ const LoginPage: React.FC = () => {
               <div className='card-body'>
                 <h2 className='text-center mb-4'>Login</h2>
                 <form onSubmit={handleSubmit}>
-                  <div className='form-group'>
+                  <div className='form-group mb-2'>
                     <label htmlFor='email'>Email address</label>
                     <input
                       type='email'
@@ -63,7 +63,7 @@ const LoginPage: React.FC = () => {
                       onChange={(event) => setEmail(event.target.value)}
                     />
                   </div>
-                  <div className='form-group'>
+                  <div className='form-group mb-2'>
                     <label htmlFor='password'>Password</label>
                     <input
                       type='password'

@@ -177,7 +177,7 @@ func GetBooks(b *Book, c int) ([]Book, error) {
 	//Add the threshhold to the similarity search for each individual category
 	whereStrings := make([]string, len(queryStrings))
 	for i, val := range queryStrings {
-		whereStrings[i] = val + " > .35"
+		whereStrings[i] = val + " > .20"
 	}
 
 	//Construct queries by appending Query conditions
@@ -186,8 +186,8 @@ func GetBooks(b *Book, c int) ([]Book, error) {
 	fmt.Println(selectQuery, whereQuery)
 	// Build the query to find similar books based on the average similarity
 	query := db.Model(&Book{}).Preload("User").Select(selectQuery, queryParameters...)
-	query = query.Where(whereQuery, queryParameters...)
-	result := query.Order("avg_similarity DESC").Limit(c).Find(&books)
+	query = query.Where(whereQuery, queryParameters...).Order("avg_similarity DESC").Limit(c)
+	result := query.Find(&books)
 
 	// Handle any errors that occur during the query execution
 	if result.Error != nil {

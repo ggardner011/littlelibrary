@@ -46,7 +46,7 @@ const RegisterPage: React.FC = () => {
               <div className='card-body'>
                 <h2 className='text-center mb-4'>Register</h2>
                 <form onSubmit={handleSubmit}>
-                  <div className='form-group'>
+                  <div className='form-group mb-2'>
                     <label htmlFor='name'>Name</label>
                     <input
                       type='text'
@@ -57,7 +57,7 @@ const RegisterPage: React.FC = () => {
                       onChange={(event) => setName(event.target.value)}
                     />
                   </div>
-                  <div className='form-group'>
+                  <div className='form-group mb-2'>
                     <label htmlFor='email'>Email address</label>
                     <input
                       type='email'
@@ -68,7 +68,7 @@ const RegisterPage: React.FC = () => {
                       onChange={(event) => setEmail(event.target.value)}
                     />
                   </div>
-                  <div className='form-group'>
+                  <div className='form-group mb-2'>
                     <label htmlFor='password'>Password</label>
                     <input
                       type='password'
@@ -79,7 +79,7 @@ const RegisterPage: React.FC = () => {
                       onChange={(event) => setPassword(event.target.value)}
                     />
                   </div>
-                  <div className='form-group'>
+                  <div className='form-group mb-2'>
                     <label htmlFor='password2'>Confirm Password</label>
                     <input
                       type='password'

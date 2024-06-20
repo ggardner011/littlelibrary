@@ -8,8 +8,7 @@ import { toast } from "react-toastify";
 import { useNavigate } from "react-router";
 
 function Header() {
-  const { isadmin } = useSelector((state: RootState) => state.user);
-  const { success } = useSelector((state: RootState) => state.auth);
+  const { success, isadmin } = useSelector((state: RootState) => state.auth);
   const dispatch = useDispatch<AppDispatch>();
   const navigate = useNavigate();
 

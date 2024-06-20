@@ -6,7 +6,6 @@ require github.com/go-chi/chi v1.5.4
 
 require (
 	github.com/decred/dcrd/dcrec/secp256k1/v4 v4.1.0 // indirect
-	github.com/dgrijalva/jwt-go v3.2.0+incompatible // indirect
 	github.com/go-chi/chi/v5 v5.0.8 // indirect
 	github.com/go-chi/jwtauth/v5 v5.1.0 // indirect
 	github.com/goccy/go-json v0.9.11 // indirect

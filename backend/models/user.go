@@ -99,3 +99,57 @@ func GrantAdminAccess(email string) error {
 	}
 	return nil
 }
+
+// FindSimilarBooks searches for books with similar Name and Email based on the provided USerstruct
+// and a similarity threshold. The results are ordered by the highest average similarity.
+func GetUsers(u *User, c int) ([]User, error) {
+	// Get the GORM database connection.
+	db := getDB()
+
+	var users []User
+
+	// Count the number of non-empty fields to calculate the average similarity
+	nonEmptyFieldCount := 0
+	queryParameters := []interface{}{}
+	queryStrings := []string{}
+
+	// Update the similarity expressions and nonEmptyFieldCount for non-empty fields in the User struct
+	if u.Name != "" {
+		nonEmptyFieldCount++
+		queryStrings = append(queryStrings, "similarity(name, ?)")
+		queryParameters = append(queryParameters, u.Name)
+	}
+	if u.Email != "" {
+		nonEmptyFieldCount++
+		queryStrings = append(queryStrings, "similarity(email, ?)")
+		queryParameters = append(queryParameters, u.Email)
+	}
+
+	// If all fields are empty, return an empty result
+	if nonEmptyFieldCount == 0 {
+		return users, nil
+	}
+
+	//Add the threshhold to the similarity search for each individual category
+	whereStrings := make([]string, len(queryStrings))
+	for i, val := range queryStrings {
+		whereStrings[i] = val + " > .20"
+	}
+
+	//Construct queries by appending Query conditions
+	selectQuery := `users.*, ` + `(` + strings.Join(queryStrings, " + ") + `) AS avg_similarity`
+	whereQuery := strings.Join(whereStrings, " OR ")
+	fmt.Println(selectQuery, whereQuery)
+	// Build the query to find similar books based on the average similarity
+	query := db.Model(&User{}).Select(selectQuery, queryParameters...)
+	query = query.Where(whereQuery, queryParameters...).Order("avg_similarity DESC").Limit(c)
+	result := query.Find(&users)
+
+	// Handle any errors that occur during the query execution
+	if result.Error != nil {
+		return nil, result.Error
+	}
+
+	// Return the books ordered by the highest average similarity
+	return users, nil
+}
