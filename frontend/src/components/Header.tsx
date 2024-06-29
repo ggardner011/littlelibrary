@@ -23,7 +23,7 @@ function Header() {
       className='navbar navbar-expand-md navbar-dark bg-primary '
       style={{ padding: "15px" }}
     >
-      <Link className='navbar-brand navbar bg-body-tertiary' to='/'>
+      <Link className='navbar-brand navbar ' to='/'>
         <div className='container-fluid'>
           <img
             src='android-chrome-192x192.png' //'android-chrome-512x512.png'

@@ -1,6 +1,9 @@
 package main
 
 import (
+	"embed"
+	"fmt"
+	"io/fs"
 	"log"
 	"myapp/handler"
 	"myapp/models"
@@ -14,6 +17,9 @@ import (
 	"github.com/go-chi/chi/v5/middleware"
 )
 
+//go:embed reactbuild/*
+var static embed.FS
+
 func main() {
 
 	//import ENV file
@@ -23,7 +29,17 @@ func main() {
 		log.Fatal("Error loading .env file")
 	}
 	//Connect to database using connection string
-	err = models.ConnectDB(os.Getenv("POSTGRESS_CONNECTION"))
+	postgresDB := os.Getenv("POSTGRES_DB")
+	postgresUser := os.Getenv("POSTGRES_USER")
+	postgresPassword := os.Getenv("POSTGRES_PASSWORD")
+	postgresPort := os.Getenv("POSTGRES_PORT")
+	postgresHost := os.Getenv("POSTGRES_HOST")
+
+	// Construct the connection string
+	dsn := fmt.Sprintf("user=%s password=%s dbname=%s host=%s port=%s sslmode=disable TimeZone=UTC",
+		postgresUser, postgresPassword, postgresDB, postgresHost, postgresPort)
+
+	err = models.ConnectDB(dsn)
 	if err != nil {
 		panic(err)
 	}
@@ -34,24 +50,26 @@ func main() {
 	r.Use(middleware.Logger)
 	r.Use(middleware.Recoverer)
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte("Hello, world!"))
-	})
+	// Serve static files from the embedded FS
+	sub, err := fs.Sub(static, "reactbuild")
+	if err != nil {
+		panic(err)
+	}
 
-	r.Group(func(r chi.Router) {
-
-	})
+	r.Handle("/*", http.FileServer(http.FS(sub)))
 
 	//Post using the User Schema as body
 	r.Post("/api/users/register", handler.CreateUserHandler)
 	r.Post("/api/users/login", handler.LoginUserHandler)
 
 	//create Auth middleware
-	jwtAuth := jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
+	tokenAuth := jwtauth.New("HS256", []byte(os.Getenv("JWT_SECRET")), nil)
 	//Secured Routes
 	r.Group(func(r chi.Router) {
-		r.Use(jwtauth.Verifier(jwtAuth))
-		r.Use(jwtauth.Authenticator)
+		//Add token sent in request to context
+		r.Use(jwtauth.Verifier(tokenAuth))
+		//Validate token and pass claims to subsequnet requests
+		r.Use(jwtauth.Authenticator(tokenAuth))
 		r.Get("/api/users/me", handler.GetSelfHandler)
 		r.Post("/api/users/grantadmin", handler.AddAdminHandler)
 		r.Post("/api/books", handler.CreateBookHandler)

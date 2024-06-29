@@ -100,8 +100,8 @@ func GrantAdminAccess(email string) error {
 	return nil
 }
 
-// FindSimilarBooks searches for books with similar Name and Email based on the provided USerstruct
-// and a similarity threshold. The results are ordered by the highest average similarity.
+// Searches for users with similar names or emails based on a
+//  similarity threshold. The results are ordered by the highest average similarity.
 func GetUsers(u *User, c int) ([]User, error) {
 	// Get the GORM database connection.
 	db := getDB()

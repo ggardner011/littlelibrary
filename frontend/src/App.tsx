@@ -11,27 +11,30 @@ import "react-toastify/dist/ReactToastify.css";
 import { RootState } from "./app/store";
 import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 import { toast } from "react-toastify";
 import AddBookPage from "./pages/AddBookPage";
 import AdminPage from "./pages/AdminPage";
+import GlobalNavigate from "./components/GlobalNavigate";
 
 const App: React.FC = () => {
   return (
     <>
       <ToastContainer />
       <BrowserRouter>
-        <Header />
-        <Routes>
-          <Route path='/' element={<HomePage />} />
-          <Route path='/register' element={<RegisterPage />} />
-          <Route path='/books' element={<BooksPage />} />
-          <Route path='/books/:isbn' element={<BookPage />} />
-          <Route path='/books/add' element={<AddBookPage />} />
-          <Route path='/admin' element={<AdminPage />} />
-
-          <Route path='/login' element={<LoginPage />} />
-        </Routes>
+        <GlobalNavigate>
+          <Header />
+          <Routes>
+            <Route path='/' element={<HomePage />} />
+            <Route path='/register' element={<RegisterPage />} />
+            <Route path='/books' element={<BooksPage />} />
+            <Route path='/books/:isbn' element={<BookPage />} />
+            <Route path='/books/add' element={<AddBookPage />} />
+            <Route path='/admin' element={<AdminPage />} />
+            <Route path='/login' element={<LoginPage />} />
+          </Routes>
+        </GlobalNavigate>
       </BrowserRouter>
     </>
   );

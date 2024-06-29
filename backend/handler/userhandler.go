@@ -79,6 +79,7 @@ func CreateUserHandler(w http.ResponseWriter, r *http.Request) {
 func LoginUserHandler(w http.ResponseWriter, r *http.Request) {
 	// Parse the JSON request body into a User object.
 	var user models.User
+
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
