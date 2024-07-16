@@ -3,13 +3,9 @@ package models
 import (
 	"errors"
 	"fmt"
-
 	"time"
-
 	"strings"
-
 	"gorm.io/gorm"
-
 	_ "github.com/lib/pq"
 )
 

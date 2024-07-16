@@ -60,6 +60,14 @@ func ConnectDB(connStr string) error {
 	if err != nil {
 		panic("Failed to migrate")
 	}
+	err = db.AutoMigrate(&Volume{})
+	if err != nil {
+		panic("Failed to migrate")
+	}
+	err = db.AutoMigrate(&VolumeTransaction{})
+	if err != nil {
+		panic("Failed to migrate")
+	}
 	///Create Trigram indexes on fields used for search
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_books_title_trgm ON books USING gin(title gin_trgm_ops)")
 	db.Exec("CREATE INDEX IF NOT EXISTS idx_books_author_trgm ON books USING gin(author gin_trgm_ops)")

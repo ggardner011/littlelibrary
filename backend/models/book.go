@@ -23,7 +23,7 @@ type Book struct {
 	TotalCopies    uint           `gorm:"not null" json:"total_copies"`
 	AddedBy        uint           `gorm:"not null" json:"added_by,omitempty"`
 
-	User User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:AddedBy" json:"user,omitempty"`
+	Admin User `gorm:"constraint:OnUpdate:CASCADE,OnDelete:SET NULL;foreignKey:AddedBy" json:"-"`
 }
 
 func validateBookInput(b *Book) error {
