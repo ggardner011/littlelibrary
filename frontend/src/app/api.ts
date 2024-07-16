@@ -27,6 +27,7 @@ api.interceptors.response.use(
         globalNavigate.navigate("/login?redirect=badtoken");
       }
     }
+
     return Promise.reject(error);
   }
 );
